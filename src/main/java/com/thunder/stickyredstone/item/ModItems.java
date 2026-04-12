@@ -1,7 +1,7 @@
 package com.thunder.stickyredstone.item;
 
-import com.redstoneplus.RedstonePlus;
-import com.redstoneplus.block.ModBlocks;
+import com.thunder.stickyredstone.block.ModBlocks;
+import com.thunder.stickyredstone.core.stickyredstone;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -10,7 +10,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public class ModItems {
 
     public static final DeferredRegister.Items ITEMS =
-            DeferredRegister.createItems(RedstonePlus.MOD_ID);
+            DeferredRegister.createItems(stickyredstone.MOD_ID);
 
     /** Item form of the wall/ceiling redstone wire (what the player holds/crafts). */
     public static final DeferredItem<BlockItem> WALL_REDSTONE_WIRE =

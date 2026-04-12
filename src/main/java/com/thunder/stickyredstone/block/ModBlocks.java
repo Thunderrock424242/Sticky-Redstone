@@ -1,6 +1,6 @@
 package com.thunder.stickyredstone.block;
 
-import com.redstoneplus.RedstonePlus;
+import com.thunder.stickyredstone.core.stickyredstone;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
@@ -10,7 +10,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public class ModBlocks {
 
     public static final DeferredRegister.Blocks BLOCKS =
-            DeferredRegister.createBlocks(RedstonePlus.MOD_ID);
+            DeferredRegister.createBlocks(stickyredstone.MOD_ID);
 
     /**
      * Wall & Ceiling Redstone Wire
