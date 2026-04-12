@@ -1,0 +1,21 @@
+{
+  "parent": "minecraft:block/thin_block",
+  "textures": {
+    "particle": "redstoneplus:block/sticky_redstone_wire",
+    "all":      "redstoneplus:block/sticky_redstone_wire"
+  },
+  "elements": [
+    {
+      "from": [0, 15, 0],
+      "to":   [16, 16, 16],
+      "faces": {
+        "down":  { "texture": "#all" },
+        "up":    { "texture": "#all", "cullface": "up" },
+        "north": { "texture": "#all" },
+        "south": { "texture": "#all" },
+        "west":  { "texture": "#all" },
+        "east":  { "texture": "#all" }
+      }
+    }
+  ]
+}

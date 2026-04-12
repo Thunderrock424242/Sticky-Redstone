@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "facing=down":  { "model": "redstoneplus:block/wall_redstone_wire_floor" },
+    "facing=up":    { "model": "redstoneplus:block/wall_redstone_wire_ceiling" },
+    "facing=north": { "model": "redstoneplus:block/wall_redstone_wire_wall", "y": 0   },
+    "facing=south": { "model": "redstoneplus:block/wall_redstone_wire_wall", "y": 180 },
+    "facing=west":  { "model": "redstoneplus:block/wall_redstone_wire_wall", "y": 270 },
+    "facing=east":  { "model": "redstoneplus:block/wall_redstone_wire_wall", "y": 90  }
+  }
+}
