@@ -5,8 +5,9 @@ import com.thunder.stickyredstone.block.ModBlocks;
 import com.thunder.stickyredstone.item.ModItems;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
+import net.neoforged.fml.config.ModConfig;
 import org.slf4j.Logger;
 
 @Mod(stickyredstone.MOD_ID)
@@ -15,10 +16,11 @@ public class stickyredstone {
     public static final String MOD_ID = "stickyredstone";
     public static final Logger LOGGER = LogUtils.getLogger();
 
-    public stickyredstone(IEventBus modEventBus) {
+    public stickyredstone(IEventBus modEventBus, ModContainer modContainer) {
         LOGGER.info("stickyredstone loading...");
 
         ModBlocks.BLOCKS.register(modEventBus);
+        modContainer.registerConfig(ModConfig.Type.COMMON, com.thunder.stickyredstone.core.ModConfig.SPEC);
         ModItems.ITEMS.register(modEventBus);
         modEventBus.addListener(this::addCreative);
 
