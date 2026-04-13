@@ -169,8 +169,7 @@ public class WallCeilingRedstoneBlock extends RedStoneWireBlock {
      */
     @Override
     public boolean canConnectRedstone(BlockState state, BlockGetter level, BlockPos pos, @Nullable Direction direction) {
-        if (direction == null) return true;
-        return direction != state.getValue(FACING).getOpposite();
+        return true;
     }
 
     /**
@@ -178,7 +177,6 @@ public class WallCeilingRedstoneBlock extends RedStoneWireBlock {
      */
     @Override
     public int getDirectSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
-        Direction facing = state.getValue(FACING);
-        return direction == facing ? state.getValue(POWER) : 0;
+        return getSignal(state, level, pos, direction);
     }
 }
