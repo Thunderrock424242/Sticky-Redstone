@@ -12,12 +12,10 @@ public class ModItems {
     public static final DeferredRegister.Items ITEMS =
             DeferredRegister.createItems(stickyredstone.MOD_ID);
 
-    /**
-     * Item form of sticky redstone wire.
-     * Crafting recipe: 1× Redstone Dust + 1× Slime Ball → 1× Sticky Redstone Wire
-     * (see data/redstoneplus/recipes/sticky_redstone_wire.json)
-     */
     public static final DeferredItem<BlockItem> STICKY_REDSTONE_WIRE =
             ITEMS.registerSimpleBlockItem("sticky_redstone_wire", ModBlocks.STICKY_REDSTONE_WIRE,
                 new Item.Properties());
+
+    private ModItems() {
+    }
 }

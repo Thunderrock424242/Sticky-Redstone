@@ -21,15 +21,16 @@ public class stickyredstone {
         LOGGER.info("stickyredstone loading...");
 
         ModBlocks.BLOCKS.register(modEventBus);
-        modContainer.registerConfig(ModConfig.Type.COMMON, com.thunder.stickyredstone.core.ModConfig.SPEC);
         ModItems.ITEMS.register(modEventBus);
+        modContainer.registerConfig(ModConfig.Type.COMMON, com.thunder.stickyredstone.core.ModConfig.SPEC);
         modEventBus.addListener(this::addCreative);
 
         LOGGER.info("stickyredstone loaded!");
     }
 
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
-        if (event.getTabKey() == CreativeModeTabs.REDSTONE_BLOCKS) {
+        if (!com.thunder.stickyredstone.core.ModConfig.VANILLA_DUST_WALLS_AND_CEILINGS.get()
+                && event.getTabKey() == CreativeModeTabs.REDSTONE_BLOCKS) {
             event.accept(ModItems.STICKY_REDSTONE_WIRE);
         }
     }
