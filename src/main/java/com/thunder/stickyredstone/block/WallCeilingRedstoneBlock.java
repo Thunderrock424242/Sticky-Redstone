@@ -17,7 +17,6 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-import javax.annotation.Nullable;
 
 /**
  * Multi-surface redstone wire that can be placed on floors, walls, and ceilings.
@@ -145,40 +144,4 @@ public class WallCeilingRedstoneBlock extends RedStoneWireBlock {
         return super.updateShape(state, direction, neighborState, level, pos, neighborPos);
     }
 
-    // -----------------------------------------------------------------------
-    // Redstone signal direction
-    // -----------------------------------------------------------------------
-
-    /**
-     * Emit redstone power toward all sides except back into the supporting surface.
-     * This allows floor↔wall↔ceiling transitions and corner propagation.
-     */
-    @Override
-    public int getSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
-        int power = state.getValue(POWER);
-        if (power == 0) return 0;
-
-        Direction facing = state.getValue(FACING);
-        if (direction == facing.getOpposite()) return 0;
-
-        return power;
-    }
-
-    /**
-     * Allow vanilla dust and components to recognize this block as a redstone connection target.
-     */
-    @Override
-    public boolean canConnectRedstone(BlockState state, BlockGetter level, BlockPos pos, @Nullable Direction direction) {
-        if (direction == null) return true;
-        return direction != state.getValue(FACING).getOpposite();
-    }
-
-    /**
-     * Direct power is emitted from the outward face.
-     */
-    @Override
-    public int getDirectSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
-        Direction facing = state.getValue(FACING);
-        return direction == facing ? state.getValue(POWER) : 0;
-    }
 }
