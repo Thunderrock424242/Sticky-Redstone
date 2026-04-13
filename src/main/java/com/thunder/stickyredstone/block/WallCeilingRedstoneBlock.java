@@ -43,10 +43,10 @@ public class WallCeilingRedstoneBlock extends RedStoneWireBlock {
     // Thin flat shapes for each orientation (2px thick slab on the surface)
     private static final VoxelShape SHAPE_FLOOR = Block.box(0, 0, 0, 16, 2, 16);
     private static final VoxelShape SHAPE_CEILING = Block.box(0, 14, 0, 16, 16, 16);
-    private static final VoxelShape SHAPE_NORTH = Block.box(0, 0, 0, 16, 16, 2);
-    private static final VoxelShape SHAPE_SOUTH = Block.box(0, 0, 14, 16, 16, 16);
-    private static final VoxelShape SHAPE_WEST = Block.box(0, 0, 0, 2, 16, 16);
-    private static final VoxelShape SHAPE_EAST = Block.box(14, 0, 0, 16, 16, 16);
+    private static final VoxelShape SHAPE_NORTH = Block.box(0, 0, 14, 16, 16, 16);
+    private static final VoxelShape SHAPE_SOUTH = Block.box(0, 0, 0, 16, 16, 2);
+    private static final VoxelShape SHAPE_WEST = Block.box(14, 0, 0, 16, 16, 16);
+    private static final VoxelShape SHAPE_EAST = Block.box(0, 0, 0, 2, 16, 16);
 
     public WallCeilingRedstoneBlock(Properties properties) {
         super(properties);
