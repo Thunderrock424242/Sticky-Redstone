@@ -8,7 +8,7 @@ public class ModConfig {
 
     public static final ModConfigSpec.BooleanValue VANILLA_DUST_WALLS_AND_CEILINGS = BUILDER
             .comment("When true, vanilla redstone dust places sticky wire on floors/walls/ceilings. When false, use the mod's sticky wire item.")
-            .define("vanillaDustWallsAndCeilings", true);
+            .define("vanillaDustWallsAndCeilings", false);
 
     public static final ModConfigSpec SPEC = BUILDER.build();
 
