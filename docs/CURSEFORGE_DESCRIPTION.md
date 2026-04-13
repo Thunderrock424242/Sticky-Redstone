@@ -9,13 +9,10 @@ Bring your redstone wiring off the floor.
 ## Features
 
 - **Surface placement in every direction**  
-  Place Sticky Redstone Wire on floor, wall, or ceiling faces.
+  Place Sticky Redstone Wires on floor, wall, or ceiling faces.
 
 - **Sticky survival**  
-  Sticky wire clings to surfaces and does not pop off when support changes.
-
-- **Slime block power boost**  
-  When mounted against a slime block, sticky wire outputs **full signal strength (15)**.
+  Sticky redstone clings to surfaces and does not pop off when support changes.
 
 - **Vanilla dust compatibility (configurable)**  
   Optional behavior lets normal redstone dust place sticky wire on walls/ceilings too.
@@ -38,7 +35,7 @@ Bring your redstone wiring off the floor.
 
 ## Config
 
-`vanillaDustWallsAndCeilings` (default: `true`)
+`vanillaDustWallsAndCeilings` (default: `false`)
 
 - `true`: Using vanilla redstone dust can place sticky wire on floor/wall/ceiling surfaces.
 - `false`: Only the Sticky Redstone Wire item places the block.
