@@ -1,20 +1,20 @@
 {
   "parent": "minecraft:block/thin_block",
   "textures": {
-    "particle": "minecraft:block/redstone_dust_dot",
-    "all":      "minecraft:block/redstone_dust_dot"
+    "particle": "minecraft:block/redstone_dust_overlay",
+    "all": "minecraft:block/redstone_dust_overlay"
   },
   "elements": [
     {
       "from": [0, 0, 0],
-      "to":   [16, 16, 1],
+      "to": [16, 16, 1],
       "faces": {
-        "down":  { "texture": "#all" },
-        "up":    { "texture": "#all" },
-        "north": { "texture": "#all", "cullface": "north" },
-        "south": { "texture": "#all" },
-        "west":  { "texture": "#all" },
-        "east":  { "texture": "#all" }
+        "down": { "texture": "#all", "tintindex": 0 },
+        "up": { "texture": "#all", "tintindex": 0 },
+        "north": { "texture": "#all", "cullface": "north", "tintindex": 0 },
+        "south": { "texture": "#all", "tintindex": 0 },
+        "west": { "texture": "#all", "tintindex": 0 },
+        "east": { "texture": "#all", "tintindex": 0 }
       }
     }
   ]
