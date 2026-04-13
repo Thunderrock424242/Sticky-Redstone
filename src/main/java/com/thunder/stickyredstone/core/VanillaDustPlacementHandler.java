@@ -40,7 +40,7 @@ public class VanillaDustPlacementHandler {
         }
 
         Direction clickedFace = event.getFace();
-        if (clickedFace == null || clickedFace == Direction.UP) {
+        if (clickedFace == null) {
             return;
         }
 
@@ -56,7 +56,7 @@ public class VanillaDustPlacementHandler {
             return;
         }
 
-        BlockState placeState = ModBlocks.WALL_REDSTONE_WIRE.get().defaultBlockState()
+        BlockState placeState = ModBlocks.STICKY_REDSTONE_WIRE.get().defaultBlockState()
                 .setValue(com.thunder.stickyredstone.block.WallCeilingRedstoneBlock.FACING, clickedFace);
 
         if (!placeState.canSurvive(level, placePos)) {
