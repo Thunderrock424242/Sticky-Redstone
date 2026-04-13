@@ -3,6 +3,7 @@ package com.thunder.stickyredstone.core;
 import com.mojang.logging.LogUtils;
 import com.thunder.stickyredstone.block.ModBlocks;
 import com.thunder.stickyredstone.item.ModItems;
+import net.minecraft.world.item.CreativeModeTabs;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -21,7 +22,15 @@ public class stickyredstone {
         ModBlocks.BLOCKS.register(modEventBus);
         modContainer.registerConfig(ModConfig.Type.COMMON, com.thunder.stickyredstone.core.ModConfig.SPEC);
         ModItems.ITEMS.register(modEventBus);
+        modEventBus.addListener(this::addCreative);
 
         LOGGER.info("stickyredstone loaded!");
+    }
+
+    private void addCreative(BuildCreativeModeTabContentsEvent event) {
+        if (event.getTabKey() == CreativeModeTabs.REDSTONE_BLOCKS) {
+            event.accept(ModItems.WALL_REDSTONE_WIRE);
+            event.accept(ModItems.STICKY_REDSTONE_WIRE);
+        }
     }
 }
