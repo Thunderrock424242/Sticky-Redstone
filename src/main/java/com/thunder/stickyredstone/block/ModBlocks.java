@@ -13,23 +13,6 @@ public class ModBlocks {
             DeferredRegister.createBlocks(stickyredstone.MOD_ID);
 
     /**
-     * Wall & Ceiling Redstone Wire
-     * Behaves identically to vanilla redstone dust but can be placed on any face.
-     */
-    public static final DeferredBlock<WallCeilingRedstoneBlock> WALL_REDSTONE_WIRE =
-            BLOCKS.register("wall_redstone_wire", () ->
-                new WallCeilingRedstoneBlock(
-                    BlockBehaviour.Properties.of()
-                        .mapColor(MapColor.FIRE)
-                        .noCollission()
-                        .instabreak()
-                        .sound(SoundType.GRAVEL)
-                        .lightLevel(state ->
-                            state.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.POWER) > 0 ? 1 : 0)
-                )
-            );
-
-    /**
      * Sticky Redstone Wire
      * Crafted from 1× Redstone Dust + 1× Slime Ball.
      * Clings to any surface and never falls off. Emits full power on slime blocks.

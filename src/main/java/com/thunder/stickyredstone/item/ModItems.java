@@ -12,11 +12,6 @@ public class ModItems {
     public static final DeferredRegister.Items ITEMS =
             DeferredRegister.createItems(stickyredstone.MOD_ID);
 
-    /** Item form of the wall/ceiling redstone wire (what the player holds/crafts). */
-    public static final DeferredItem<BlockItem> WALL_REDSTONE_WIRE =
-            ITEMS.registerSimpleBlockItem("wall_redstone_wire", ModBlocks.WALL_REDSTONE_WIRE,
-                new Item.Properties());
-
     /**
      * Item form of sticky redstone wire.
      * Crafting recipe: 1× Redstone Dust + 1× Slime Ball → 1× Sticky Redstone Wire
