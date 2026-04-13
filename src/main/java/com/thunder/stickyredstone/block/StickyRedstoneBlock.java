@@ -7,7 +7,7 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.RedStoneWireBlock;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
@@ -15,44 +15,42 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
+import javax.annotation.Nullable;
+
 /**
  * StickyRedstoneBlock
  *
  * A variant of {@link WallCeilingRedstoneBlock} crafted from
  * Redstone Dust + Slime Ball.
  *
- * Extra behaviour over normal wall/ceiling redstone:
+ * Extra behavior over normal wall/ceiling redstone:
  *
- *   1. STICKY SURVIVAL  – The wire sticks to ANY block face, even non-sturdy
- *      ones such as glass panes, fences, or other transparent blocks.
- *      It will NOT break when the supporting block is destroyed; instead it
- *      "floats" in air until the player removes it.
+ *   1. STICKY SURVIVAL  – The wire sticks to any block face, including
+ *      non-sturdy targets such as panes/fences/leaves, and can float.
  *
- *   2. BOOST ON SLIME   – When placed on a Slime Block the wire transmits
- *      power at full strength (15) regardless of its own stored power, letting
- *      you use slime as an amplifier/relay surface.
+ *   2. BOOST ON SLIME   – When attached to a slime block, transmitted
+ *      power is forced to full strength (15).
  *
- *   3. VISUAL DIFFERENCE – Uses its own texture/model (sticky_redstone_wire*)
- *      so players can tell it apart from ordinary wall redstone at a glance.
+ *   3. VISUAL DIFFERENCE – Uses sticky-specific models so players can
+ *      distinguish it from regular wall/ceiling wire.
  */
 public class StickyRedstoneBlock extends WallCeilingRedstoneBlock {
 
     public static final DirectionProperty FACING = BlockStateProperties.FACING;
-    public static final IntegerProperty   POWER  = BlockStateProperties.POWER;
+    public static final IntegerProperty POWER = BlockStateProperties.POWER;
 
-    // Same thin-slab shapes as the parent – reused from superclass constants
-    private static final VoxelShape SHAPE_DOWN  = Block.box(0,  0, 0, 16,  2, 16);
-    private static final VoxelShape SHAPE_UP    = Block.box(0, 14, 0, 16, 16, 16);
-    private static final VoxelShape SHAPE_NORTH = Block.box(0,  0, 0, 16, 16,  2);
-    private static final VoxelShape SHAPE_SOUTH = Block.box(0,  0,14, 16, 16, 16);
-    private static final VoxelShape SHAPE_WEST  = Block.box(0,  0, 0,  2, 16, 16);
-    private static final VoxelShape SHAPE_EAST  = Block.box(14, 0, 0, 16, 16, 16);
+    private static final VoxelShape SHAPE_FLOOR = Block.box(0, 0, 0, 16, 2, 16);
+    private static final VoxelShape SHAPE_CEILING = Block.box(0, 14, 0, 16, 16, 16);
+    private static final VoxelShape SHAPE_NORTH = Block.box(0, 0, 0, 16, 16, 2);
+    private static final VoxelShape SHAPE_SOUTH = Block.box(0, 0, 14, 16, 16, 16);
+    private static final VoxelShape SHAPE_WEST = Block.box(0, 0, 0, 2, 16, 16);
+    private static final VoxelShape SHAPE_EAST = Block.box(14, 0, 0, 16, 16, 16);
 
     public StickyRedstoneBlock(Properties properties) {
         super(properties);
         registerDefaultState(
             stateDefinition.any()
-                .setValue(FACING, Direction.DOWN)
+                .setValue(FACING, Direction.UP)
                 .setValue(POWER, 0)
         );
     }
@@ -62,26 +60,23 @@ public class StickyRedstoneBlock extends WallCeilingRedstoneBlock {
     // -----------------------------------------------------------------------
 
     /**
-     * Sticky redstone always "survives" – it won't pop off by itself.
-     * If there's something to cling to, great; if not, it just floats.
+     * Sticky redstone always survives; it won't pop off by itself.
      */
     @Override
     public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
-        return true; // sticky – never pops off
+        return true;
     }
 
     /**
-     * Sticky redstone can be placed on ANY face (glass, leaves, fences, air …).
-     * We only return null if the placement pos is already occupied.
+     * Sticky redstone can be placed on any clicked face.
      */
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         Direction clickedFace = context.getClickedFace();
-
-        // Grab the parent's connection-property state (ignore its placement check)
         BlockState base = super.getStateForPlacement(context);
 
-        // If super returned null (couldn't survive), construct a minimal state manually
+        // If parent rejects placement due to non-sturdy support,
+        // sticky wire still places using default state.
         if (base == null) {
             base = defaultBlockState();
         }
@@ -90,8 +85,8 @@ public class StickyRedstoneBlock extends WallCeilingRedstoneBlock {
     }
 
     /**
-     * Override updateShape to NOT destroy the wire when its supporting block
-     * is removed – sticky redstone floats in place.
+     * Sticky wire does not drop when its supporting face disappears.
+     * We bypass the parent drop-on-support-loss rule for that one side.
      */
     @Override
     public BlockState updateShape(
@@ -101,15 +96,13 @@ public class StickyRedstoneBlock extends WallCeilingRedstoneBlock {
             LevelAccessor level,
             BlockPos pos,
             BlockPos neighborPos) {
+        Direction facing = state.getValue(FACING);
 
-        // Skip the parent's "break if support removed" check.
-        // Still call RedStoneWireBlock's super for connection updates,
-        // but skip the survivability destruction from WallCeilingRedstoneBlock.
-        return RedStoneWireBlock.class.cast(this)
-                .updateShape(state, direction, neighborState, level, pos, neighborPos);
-        // Note: because Java doesn't allow calling grandparent methods directly,
-        // we let the base RedStoneWireBlock handle connection property updates
-        // without the face-check destruction our parent adds.
+        if (direction == facing.getOpposite() && !neighborState.isFaceSturdy(level, neighborPos, facing)) {
+            return state;
+        }
+
+        return super.updateShape(state, direction, neighborState, level, pos, neighborPos);
     }
 
     // -----------------------------------------------------------------------
@@ -120,17 +113,25 @@ public class StickyRedstoneBlock extends WallCeilingRedstoneBlock {
     public int getSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
         Direction facing = state.getValue(FACING);
 
-        // No signal back into the surface (same as parent)
+        // No signal back into the surface.
         if (direction == facing.getOpposite()) return 0;
 
-        // Check if we're sitting on a slime block → amplify to 15
         BlockPos supportPos = pos.relative(facing.getOpposite());
-        BlockState support  = level.getBlockState(supportPos);
-        if (support.is(net.minecraft.world.level.block.Blocks.SLIME_BLOCK)) {
+        BlockState support = level.getBlockState(supportPos);
+        if (support.is(Blocks.SLIME_BLOCK)) {
             return 15;
         }
 
         return state.getValue(POWER);
+    }
+
+    /**
+     * Allow vanilla dust and components to recognize this block as a redstone connection target.
+     */
+    @Override
+    public boolean canConnectRedstone(BlockState state, BlockGetter level, BlockPos pos, @Nullable Direction direction) {
+        if (direction == null) return true;
+        return direction != state.getValue(FACING).getOpposite();
     }
 
     @Override
@@ -139,7 +140,7 @@ public class StickyRedstoneBlock extends WallCeilingRedstoneBlock {
         if (direction != facing) return 0;
 
         BlockPos supportPos = pos.relative(facing.getOpposite());
-        if (level.getBlockState(supportPos).is(net.minecraft.world.level.block.Blocks.SLIME_BLOCK)) {
+        if (level.getBlockState(supportPos).is(Blocks.SLIME_BLOCK)) {
             return 15;
         }
 
@@ -153,12 +154,12 @@ public class StickyRedstoneBlock extends WallCeilingRedstoneBlock {
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return switch (state.getValue(FACING)) {
-            case UP    -> SHAPE_UP;
+            case DOWN -> SHAPE_CEILING;
             case NORTH -> SHAPE_NORTH;
             case SOUTH -> SHAPE_SOUTH;
-            case WEST  -> SHAPE_WEST;
-            case EAST  -> SHAPE_EAST;
-            default    -> SHAPE_DOWN;
+            case WEST -> SHAPE_WEST;
+            case EAST -> SHAPE_EAST;
+            default -> SHAPE_FLOOR;
         };
     }
 }

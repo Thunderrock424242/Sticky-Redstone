@@ -38,7 +38,7 @@ public class ModBlocks {
             BLOCKS.register("sticky_redstone_wire", () ->
                 new StickyRedstoneBlock(
                     BlockBehaviour.Properties.of()
-                        .mapColor(MapColor.SLIME)
+                        .mapColor(MapColor.GRASS)
                         .noCollission()
                         .instabreak()
                         .sound(SoundType.SLIME_BLOCK)
