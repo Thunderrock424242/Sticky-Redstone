@@ -2,16 +2,26 @@ package com.thunder.stickyredstone.core.client;
 
 import com.thunder.stickyredstone.block.ModBlocks;
 import com.thunder.stickyredstone.core.stickyredstone;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.world.level.block.RedStoneWireBlock;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
 
 @EventBusSubscriber(modid = stickyredstone.MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public final class ModClientEvents {
 
     private ModClientEvents() {
+    }
+
+    @SubscribeEvent
+    public static void onClientSetup(FMLClientSetupEvent event) {
+        event.enqueueWork(() ->
+                ItemBlockRenderTypes.setRenderLayer(ModBlocks.STICKY_REDSTONE_WIRE.get(), RenderType.cutout())
+        );
     }
 
     @SubscribeEvent

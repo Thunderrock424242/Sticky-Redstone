@@ -94,16 +94,20 @@ public class WallCeilingRedstoneBlock extends RedStoneWireBlock {
      */
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        Direction clickedFace = context.getClickedFace();
-        BlockPos supportPos = context.getClickedPos().relative(clickedFace.getOpposite());
+        BlockPos placePos = context.getClickedPos();
 
-        // Verify that surface is solid enough to hold non-sticky wire.
-        BlockState support = context.getLevel().getBlockState(supportPos);
-        if (!support.isFaceSturdy(context.getLevel(), supportPos, clickedFace)) {
-            return null;
+        // Prefer clicked face first, then fallback to nearest looking directions like vanilla placement.
+        for (Direction direction : context.getNearestLookingDirections()) {
+            Direction attachFace = direction.getOpposite();
+            BlockPos supportPos = placePos.relative(attachFace.getOpposite());
+            BlockState support = context.getLevel().getBlockState(supportPos);
+
+            if (support.isFaceSturdy(context.getLevel(), supportPos, attachFace)) {
+                return defaultBlockState().setValue(FACING, attachFace);
+            }
         }
 
-        return defaultBlockState().setValue(FACING, clickedFace);
+        return null;
     }
 
     // -----------------------------------------------------------------------
