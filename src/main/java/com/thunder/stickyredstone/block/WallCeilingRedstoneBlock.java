@@ -103,10 +103,7 @@ public class WallCeilingRedstoneBlock extends RedStoneWireBlock {
             return null;
         }
 
-        BlockState baseState = super.getStateForPlacement(context);
-        if (baseState == null) return null;
-
-        return baseState.setValue(FACING, clickedFace);
+        return defaultBlockState().setValue(FACING, clickedFace);
     }
 
     // -----------------------------------------------------------------------
