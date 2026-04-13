@@ -18,6 +18,7 @@ import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import org.jetbrains.annotations.Nullable;
 
 
 /**
@@ -216,7 +217,7 @@ public class WallCeilingRedstoneBlock extends RedStoneWireBlock {
     }
 
     private int calculateTargetPower(Level level, BlockPos pos) {
-        int strongest = 0;
+        int strongest = level.getBestNeighborSignal(pos);
 
         for (Direction direction : Direction.values()) {
             BlockPos neighborPos = pos.relative(direction);
@@ -224,7 +225,7 @@ public class WallCeilingRedstoneBlock extends RedStoneWireBlock {
 
             strongest = Math.max(strongest, neighborState.getSignal(level, neighborPos, direction.getOpposite()));
 
-            if (neighborState.is(this)) {
+            if (neighborState.getBlock() instanceof RedStoneWireBlock) {
                 strongest = Math.max(strongest, neighborState.getValue(POWER) - 1);
             }
 
