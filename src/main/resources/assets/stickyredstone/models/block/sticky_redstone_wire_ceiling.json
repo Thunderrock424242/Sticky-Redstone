@@ -1,8 +1,8 @@
 {
   "parent": "minecraft:block/thin_block",
   "textures": {
-    "particle": "redstoneplus:block/sticky_redstone_wire",
-    "all":      "redstoneplus:block/sticky_redstone_wire"
+    "particle": "minecraft:block/redstone_dust_dot",
+    "all":      "minecraft:block/redstone_dust_dot"
   },
   "elements": [
     {

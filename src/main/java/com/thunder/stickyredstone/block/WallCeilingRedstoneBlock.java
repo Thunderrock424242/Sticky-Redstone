@@ -17,40 +17,43 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
+import javax.annotation.Nullable;
+
 /**
  * Multi-surface redstone wire that can be placed on floors, walls, and ceilings.
  *
- * Key differences from vanilla RedStoneWireBlock:
- *   - Uses FACING (a DirectionProperty) to track which surface it's attached to.
- *   - canSurvive() checks ANY solid face, not just the floor.
- *   - getStateForPlacement() picks the face from the player's click direction.
- *   - Signal output is directed along the plane of the surface.
+ * Key differences from vanilla {@link RedStoneWireBlock}:
+ * <ul>
+ *   <li>Uses {@link #FACING} to track the outward normal of the attached surface.</li>
+ *   <li>{@link #canSurvive(BlockState, LevelReader, BlockPos)} checks any sturdy face.</li>
+ *   <li>{@link #getStateForPlacement(BlockPlaceContext)} attaches to the clicked face.</li>
+ *   <li>Signal output works on floor, wall, and ceiling placements.</li>
+ * </ul>
  *
- * The block is intentionally kept thin (1/16 slab on the attachment face)
- * so it looks like a painted wire on the surface.
+ * The block stays visually thin (2px) so it reads like painted redstone on surfaces.
  */
 public class WallCeilingRedstoneBlock extends RedStoneWireBlock {
 
-    /** Which face this wire is glued to (the face BEHIND the wire, not the outward normal). */
+    /** Outward normal from the surface this wire is attached to. */
     public static final DirectionProperty FACING = BlockStateProperties.FACING;
 
     /** Power level 0–15 (inherited from RedStoneWireBlock via POWER property). */
     public static final IntegerProperty POWER = BlockStateProperties.POWER;
 
     // Thin flat shapes for each orientation (2px thick slab on the surface)
-    private static final VoxelShape SHAPE_DOWN  = Block.box(0, 0, 0, 16, 2, 16);   // floor
-    private static final VoxelShape SHAPE_UP    = Block.box(0, 14, 0, 16, 16, 16); // ceiling
-    private static final VoxelShape SHAPE_NORTH = Block.box(0, 0, 0, 16, 16, 2);   // south wall face
-    private static final VoxelShape SHAPE_SOUTH = Block.box(0, 0, 14, 16, 16, 16); // north wall face
-    private static final VoxelShape SHAPE_WEST  = Block.box(0, 0, 0, 2, 16, 16);   // east wall face
-    private static final VoxelShape SHAPE_EAST  = Block.box(14, 0, 0, 16, 16, 16); // west wall face
+    private static final VoxelShape SHAPE_FLOOR = Block.box(0, 0, 0, 16, 2, 16);
+    private static final VoxelShape SHAPE_CEILING = Block.box(0, 14, 0, 16, 16, 16);
+    private static final VoxelShape SHAPE_NORTH = Block.box(0, 0, 0, 16, 16, 2);
+    private static final VoxelShape SHAPE_SOUTH = Block.box(0, 0, 14, 16, 16, 16);
+    private static final VoxelShape SHAPE_WEST = Block.box(0, 0, 0, 2, 16, 16);
+    private static final VoxelShape SHAPE_EAST = Block.box(14, 0, 0, 16, 16, 16);
 
     public WallCeilingRedstoneBlock(Properties properties) {
         super(properties);
-        // Default: attached to the floor (same as vanilla redstone)
+        // Default = floor-attached wire (surface normal points up).
         registerDefaultState(
             stateDefinition.any()
-                .setValue(FACING, Direction.DOWN)
+                .setValue(FACING, Direction.UP)
                 .setValue(POWER, 0)
         );
     }
@@ -61,7 +64,7 @@ public class WallCeilingRedstoneBlock extends RedStoneWireBlock {
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        super.createBlockStateDefinition(builder); // adds POWER + wire connection props
+        super.createBlockStateDefinition(builder);
         builder.add(FACING);
     }
 
@@ -72,12 +75,12 @@ public class WallCeilingRedstoneBlock extends RedStoneWireBlock {
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return switch (state.getValue(FACING)) {
-            case UP    -> SHAPE_UP;
+            case DOWN -> SHAPE_CEILING;
             case NORTH -> SHAPE_NORTH;
             case SOUTH -> SHAPE_SOUTH;
-            case WEST  -> SHAPE_WEST;
-            case EAST  -> SHAPE_EAST;
-            default    -> SHAPE_DOWN;   // DOWN = floor, same as vanilla
+            case WEST -> SHAPE_WEST;
+            case EAST -> SHAPE_EAST;
+            default -> SHAPE_FLOOR;
         };
     }
 
@@ -87,18 +90,17 @@ public class WallCeilingRedstoneBlock extends RedStoneWireBlock {
 
     /**
      * Called when the player right-clicks a face to place the block.
-     * We record which face was clicked so we know what surface to attach to.
+     * The clicked face becomes this wire's attached-surface normal.
      */
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        // The face the player clicked is the surface we attach to
         Direction clickedFace = context.getClickedFace();
-        BlockPos attachPos = context.getClickedPos().relative(clickedFace.getOpposite());
+        BlockPos supportPos = context.getClickedPos().relative(clickedFace.getOpposite());
 
-        // Verify that surface is solid enough to hold the wire
-        BlockState support = context.getLevel().getBlockState(attachPos);
-        if (!support.isFaceSturdy(context.getLevel(), attachPos, clickedFace)) {
-            return null; // can't place here – NeoForge will cancel placement
+        // Verify that surface is solid enough to hold non-sticky wire.
+        BlockState support = context.getLevel().getBlockState(supportPos);
+        if (!support.isFaceSturdy(context.getLevel(), supportPos, clickedFace)) {
+            return null;
         }
 
         BlockState baseState = super.getStateForPlacement(context);
@@ -112,7 +114,7 @@ public class WallCeilingRedstoneBlock extends RedStoneWireBlock {
     // -----------------------------------------------------------------------
 
     /**
-     * The wire survives as long as its backing surface is solid.
+     * The wire survives as long as its backing surface is sturdy.
      */
     @Override
     public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
@@ -122,7 +124,7 @@ public class WallCeilingRedstoneBlock extends RedStoneWireBlock {
     }
 
     /**
-     * If the block we are attached to is removed, destroy the wire.
+     * If the support face disappears, regular wall/ceiling wire drops.
      */
     @Override
     public BlockState updateShape(
@@ -135,11 +137,8 @@ public class WallCeilingRedstoneBlock extends RedStoneWireBlock {
 
         Direction facing = state.getValue(FACING);
 
-        // If the support block was removed, drop the wire
-        if (direction == facing.getOpposite()) {
-            if (!neighborState.isFaceSturdy(level, neighborPos, facing)) {
-                return Blocks.AIR.defaultBlockState();
-            }
+        if (direction == facing.getOpposite() && !neighborState.isFaceSturdy(level, neighborPos, facing)) {
+            return Blocks.AIR.defaultBlockState();
         }
 
         return super.updateShape(state, direction, neighborState, level, pos, neighborPos);
@@ -150,9 +149,8 @@ public class WallCeilingRedstoneBlock extends RedStoneWireBlock {
     // -----------------------------------------------------------------------
 
     /**
-     * Emit redstone power toward any adjacent block, respecting the orientation.
-     * On a wall, signals travel up/down and sideways along the wall; they also
-     * pass through to the block directly in front (the outward normal side).
+     * Emit redstone power toward all sides except back into the supporting surface.
+     * This allows floor↔wall↔ceiling transitions and corner propagation.
      */
     @Override
     public int getSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
@@ -160,16 +158,25 @@ public class WallCeilingRedstoneBlock extends RedStoneWireBlock {
         if (power == 0) return 0;
 
         Direction facing = state.getValue(FACING);
-
-        // Don't emit back into the supporting wall/floor/ceiling
         if (direction == facing.getOpposite()) return 0;
 
         return power;
     }
 
+    /**
+     * Allow vanilla dust and components to recognize this block as a redstone connection target.
+     */
+    @Override
+    public boolean canConnectRedstone(BlockState state, BlockGetter level, BlockPos pos, @Nullable Direction direction) {
+        if (direction == null) return true;
+        return direction != state.getValue(FACING).getOpposite();
+    }
+
+    /**
+     * Direct power is emitted from the outward face.
+     */
     @Override
     public int getDirectSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
-        // Direct signal only on the outward face (the face "above" the wire)
         Direction facing = state.getValue(FACING);
         return direction == facing ? state.getValue(POWER) : 0;
     }

@@ -1,10 +1,10 @@
 {
   "variants": {
-    "facing=down":  { "model": "redstoneplus:block/sticky_redstone_wire_floor" },
-    "facing=up":    { "model": "redstoneplus:block/sticky_redstone_wire_ceiling" },
-    "facing=north": { "model": "redstoneplus:block/sticky_redstone_wire_wall", "y": 0   },
-    "facing=south": { "model": "redstoneplus:block/sticky_redstone_wire_wall", "y": 180 },
-    "facing=west":  { "model": "redstoneplus:block/sticky_redstone_wire_wall", "y": 270 },
-    "facing=east":  { "model": "redstoneplus:block/sticky_redstone_wire_wall", "y": 90  }
+    "facing=up":    { "model": "stickyredstone:block/sticky_redstone_wire_floor" },
+    "facing=down":  { "model": "stickyredstone:block/sticky_redstone_wire_ceiling" },
+    "facing=north": { "model": "stickyredstone:block/sticky_redstone_wire_wall", "y": 0   },
+    "facing=south": { "model": "stickyredstone:block/sticky_redstone_wire_wall", "y": 180 },
+    "facing=west":  { "model": "stickyredstone:block/sticky_redstone_wire_wall", "y": 270 },
+    "facing=east":  { "model": "stickyredstone:block/sticky_redstone_wire_wall", "y": 90  }
   }
 }
