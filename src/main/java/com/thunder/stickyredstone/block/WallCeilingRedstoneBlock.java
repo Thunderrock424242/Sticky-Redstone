@@ -2,8 +2,10 @@ package com.thunder.stickyredstone.block;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
@@ -141,7 +143,96 @@ public class WallCeilingRedstoneBlock extends RedStoneWireBlock {
             return Blocks.AIR.defaultBlockState();
         }
 
+        if (level instanceof Level realLevel && !realLevel.isClientSide) {
+            updatePower(realLevel, pos, state);
+        }
+
         return super.updateShape(state, direction, neighborState, level, pos, neighborPos);
     }
 
+    @Override
+    public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean movedByPiston) {
+        super.onPlace(state, level, pos, oldState, movedByPiston);
+        if (!level.isClientSide) {
+            updatePower(level, pos, state);
+        }
+    }
+
+    @Override
+    public void neighborChanged(BlockState state, Level level, BlockPos pos, Block neighborBlock, BlockPos neighborPos, boolean movedByPiston) {
+        super.neighborChanged(state, level, pos, neighborBlock, neighborPos, movedByPiston);
+        if (!level.isClientSide) {
+            updatePower(level, pos, state);
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Redstone signal direction
+    // -----------------------------------------------------------------------
+
+    /**
+     * Emit redstone power toward all sides except back into the supporting surface.
+     * This allows floor↔wall↔ceiling transitions and corner propagation.
+     */
+    @Override
+    public int getSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
+        int power = state.getValue(POWER);
+        if (power == 0) return 0;
+
+        Direction facing = state.getValue(FACING);
+        if (direction == facing.getOpposite()) return 0;
+
+        return power;
+    }
+
+    /**
+     * Allow vanilla dust and components to recognize this block as a redstone connection target.
+     */
+    @Override
+    public boolean canConnectRedstone(BlockState state, BlockGetter level, BlockPos pos, @Nullable Direction direction) {
+        return true;
+    }
+
+    /**
+     * Direct power is emitted from the outward face.
+     */
+    @Override
+    public int getDirectSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
+        return getSignal(state, level, pos, direction);
+    }
+
+    private void updatePower(Level level, BlockPos pos, BlockState state) {
+        int targetPower = calculateTargetPower(level, pos);
+        int currentPower = state.getValue(POWER);
+        if (targetPower == currentPower) {
+            return;
+        }
+
+        level.setBlock(pos, state.setValue(POWER, targetPower), 2);
+        level.updateNeighborsAt(pos, this);
+        for (Direction direction : Direction.values()) {
+            level.updateNeighborsAt(pos.relative(direction), this);
+        }
+    }
+
+    private int calculateTargetPower(Level level, BlockPos pos) {
+        int strongest = 0;
+
+        for (Direction direction : Direction.values()) {
+            BlockPos neighborPos = pos.relative(direction);
+            BlockState neighborState = level.getBlockState(neighborPos);
+
+            strongest = Math.max(strongest, neighborState.getSignal(level, neighborPos, direction.getOpposite()));
+
+            if (neighborState.is(this)) {
+                strongest = Math.max(strongest, neighborState.getValue(POWER) - 1);
+            }
+
+            if (strongest >= 15) {
+                return 15;
+            }
+        }
+
+        return Mth.clamp(strongest, 0, 15);
+    }
 }
