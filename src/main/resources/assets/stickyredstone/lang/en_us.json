@@ -1,6 +1,4 @@
 {
-  "block.redstoneplus.wall_redstone_wire":   "Redstone Wire",
-  "block.redstoneplus.sticky_redstone_wire": "Sticky Redstone Wire",
-
-  "itemGroup.redstoneplus.tab": "RedstonePlus"
+  "block.stickyredstone.wall_redstone_wire": "Wall Redstone Wire",
+  "block.stickyredstone.sticky_redstone_wire": "Sticky Redstone Wire"
 }
