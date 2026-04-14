@@ -1,10 +1,10 @@
 {
-  "variants": {
-    "facing=up":    { "model": "stickyredstone:block/sticky_redstone_wire_floor" },
-    "facing=down":  { "model": "stickyredstone:block/sticky_redstone_wire_ceiling" },
-    "facing=north": { "model": "stickyredstone:block/sticky_redstone_wire_wall", "y": 0   },
-    "facing=south": { "model": "stickyredstone:block/sticky_redstone_wire_wall", "y": 180 },
-    "facing=west":  { "model": "stickyredstone:block/sticky_redstone_wire_wall", "y": 270 },
-    "facing=east":  { "model": "stickyredstone:block/sticky_redstone_wire_wall", "y": 90  }
-  }
+  "multipart": [
+    { "when": { "facing": "up" },    "apply": { "model": "stickyredstone:block/sticky_redstone_wire_floor" } },
+    { "when": { "facing": "down" },  "apply": { "model": "stickyredstone:block/sticky_redstone_wire_ceiling" } },
+    { "when": { "facing": "north" }, "apply": { "model": "stickyredstone:block/sticky_redstone_wire_wall", "y": 0 } },
+    { "when": { "facing": "south" }, "apply": { "model": "stickyredstone:block/sticky_redstone_wire_wall", "y": 180 } },
+    { "when": { "facing": "west" },  "apply": { "model": "stickyredstone:block/sticky_redstone_wire_wall", "y": 270 } },
+    { "when": { "facing": "east" },  "apply": { "model": "stickyredstone:block/sticky_redstone_wire_wall", "y": 90 } }
+  ]
 }

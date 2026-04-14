@@ -23,7 +23,7 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * Multi-surface redstone wire that can be placed on floors, walls, and ceilings.
- *
+ * <p>
  * Key differences from vanilla {@link RedStoneWireBlock}:
  * <ul>
  *   <li>Uses {@link #FACING} to track the outward normal of the attached surface.</li>
@@ -97,19 +97,27 @@ public class WallCeilingRedstoneBlock extends RedStoneWireBlock {
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         BlockPos placePos = context.getClickedPos();
+        Direction attachedFace = null;
 
-        // Prefer clicked face first, then fallback to nearest looking directions like vanilla placement.
+        // 1. Find the surface we are attaching to
         for (Direction direction : context.getNearestLookingDirections()) {
-            Direction attachFace = direction.getOpposite();
-            BlockPos supportPos = placePos.relative(attachFace.getOpposite());
+            Direction face = direction.getOpposite();
+            BlockPos supportPos = placePos.relative(face.getOpposite());
             BlockState support = context.getLevel().getBlockState(supportPos);
 
-            if (support.isFaceSturdy(context.getLevel(), supportPos, attachFace)) {
-                return defaultBlockState().setValue(FACING, attachFace);
+            if (support.isFaceSturdy(context.getLevel(), supportPos, face)) {
+                attachedFace = face;
+                break;
             }
         }
 
-        return null;
+        if (attachedFace == null) return null;
+
+        // 2. Set the facing direction
+        BlockState state = this.defaultBlockState().setValue(FACING, attachedFace);
+
+        // 3. Ask vanilla to calculate the visual lines/connections for this block state
+        return this.getConnectionState(context.getLevel(), state, placePos);
     }
 
     // -----------------------------------------------------------------------

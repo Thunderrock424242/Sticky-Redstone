@@ -26,7 +26,15 @@ public class VanillaDustPlacementHandler {
 
     @SubscribeEvent
     public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
+        // 1. Check if the config is actually enabled first
         if (!ModConfig.VANILLA_DUST_WALLS_AND_CEILINGS.get()) {
+            return;
+        }
+
+        Direction clickedFace = event.getFace();
+
+        // 2. If they click the top of a block (the floor), let Vanilla handle it!
+        if (clickedFace == null || clickedFace == Direction.UP) {
             return;
         }
 
@@ -36,11 +44,6 @@ public class VanillaDustPlacementHandler {
         ItemStack held = player.getItemInHand(hand);
 
         if (!held.is(Items.REDSTONE)) {
-            return;
-        }
-
-        Direction clickedFace = event.getFace();
-        if (clickedFace == null) {
             return;
         }
 
