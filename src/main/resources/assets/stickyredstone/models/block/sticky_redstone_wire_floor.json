@@ -1,8 +1,8 @@
 {
   "parent": "minecraft:block/block",
   "textures": {
-    "particle": "minecraft:block/redstone_dust_cross",
-    "wire": "minecraft:block/redstone_dust_cross"
+    "particle": "minecraft:block/redstone_dust_dot",
+    "wire": "minecraft:block/redstone_dust_dot"
   },
   "elements": [
     {
