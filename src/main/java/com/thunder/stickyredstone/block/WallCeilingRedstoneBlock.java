@@ -113,11 +113,16 @@ public class WallCeilingRedstoneBlock extends RedStoneWireBlock {
 
         if (attachedFace == null) return null;
 
-        // 2. Set the facing direction
-        BlockState state = this.defaultBlockState().setValue(FACING, attachedFace);
+        // 2. Ask vanilla to calculate the visual lines/connections for this block state
+        BlockState vanillaState = super.getStateForPlacement(context);
 
-        // 3. Ask vanilla to calculate the visual lines/connections for this block state
-        return this.getConnectionState(context.getLevel(), state, placePos);
+        // Failsafe in case vanilla tries to reject the placement
+        if (vanillaState == null) {
+            vanillaState = this.defaultBlockState();
+        }
+
+        // 3. Add our custom facing direction to the connected state
+        return vanillaState.setValue(FACING, attachedFace);
     }
 
     // -----------------------------------------------------------------------
