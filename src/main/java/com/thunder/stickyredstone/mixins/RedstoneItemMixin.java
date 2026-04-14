@@ -1,7 +1,6 @@
 package com.thunder.stickyredstone.mixins;
 
-import com.thunder.stickyredstone.block.ModBlocks;
-import com.thunder.stickyredstone.block.WallCeilingRedstoneBlock;
+import com.thunder.stickyredstone.mixins.support.StickyRedstoneProperties;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundSource;
@@ -50,8 +49,8 @@ public abstract class RedstoneItemMixin {
             return;
         }
 
-        BlockState placeState = ModBlocks.STICKY_REDSTONE_WIRE.get().defaultBlockState()
-                .setValue(WallCeilingRedstoneBlock.FACING, clickedFace);
+        BlockState placeState = Blocks.REDSTONE_WIRE.defaultBlockState()
+                .setValue(StickyRedstoneProperties.FACING, clickedFace);
 
         if (!placeState.canSurvive(level, placePos)) {
             return;

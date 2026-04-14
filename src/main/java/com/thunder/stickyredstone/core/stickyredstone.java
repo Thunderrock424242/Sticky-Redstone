@@ -1,7 +1,6 @@
 package com.thunder.stickyredstone.core;
 
 import com.mojang.logging.LogUtils;
-import com.thunder.stickyredstone.block.ModBlocks;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -15,8 +14,6 @@ public class stickyredstone {
 
     public stickyredstone(IEventBus modEventBus, ModContainer modContainer) {
         LOGGER.info("stickyredstone loading...");
-
-        ModBlocks.BLOCKS.register(modEventBus);
 
         LOGGER.info("stickyredstone loaded!");
     }
