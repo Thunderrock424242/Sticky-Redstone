@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.thunder.stickyredstone.mixins",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "RedstoneItemMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
