@@ -16,33 +16,16 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.level.block.state.properties.RedstoneSide;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
-
-/**
- * Multi-surface redstone wire that can be placed on floors, walls, and ceilings.
- * <p>
- * Key differences from vanilla {@link RedStoneWireBlock}:
- * <ul>
- *   <li>Uses {@link #FACING} to track the outward normal of the attached surface.</li>
- *   <li>{@link #canSurvive(BlockState, LevelReader, BlockPos)} checks any sturdy face.</li>
- *   <li>{@link #getStateForPlacement(BlockPlaceContext)} attaches to the clicked face.</li>
- *   <li>Signal output works on floor, wall, and ceiling placements.</li>
- * </ul>
- *
- * The block stays visually thin (2px) so it reads like painted redstone on surfaces.
- */
 public class WallCeilingRedstoneBlock extends RedStoneWireBlock {
 
-    /** Outward normal from the surface this wire is attached to. */
     public static final DirectionProperty FACING = BlockStateProperties.FACING;
-
-    /** Power level 0–15 (inherited from RedStoneWireBlock via POWER property). */
     public static final IntegerProperty POWER = BlockStateProperties.POWER;
 
-    // Thin flat shapes for each orientation (2px thick slab on the surface)
     private static final VoxelShape SHAPE_FLOOR = Block.box(0, 0, 0, 16, 2, 16);
     private static final VoxelShape SHAPE_CEILING = Block.box(0, 14, 0, 16, 16, 16);
     private static final VoxelShape SHAPE_NORTH = Block.box(0, 0, 14, 16, 16, 16);
@@ -52,27 +35,22 @@ public class WallCeilingRedstoneBlock extends RedStoneWireBlock {
 
     public WallCeilingRedstoneBlock(Properties properties) {
         super(properties);
-        // Default = floor-attached wire (surface normal points up).
         registerDefaultState(
-            stateDefinition.any()
-                .setValue(FACING, Direction.UP)
-                .setValue(POWER, 0)
+                stateDefinition.any()
+                        .setValue(FACING, Direction.UP)
+                        .setValue(POWER, 0)
+                        .setValue(NORTH, RedstoneSide.NONE)
+                        .setValue(SOUTH, RedstoneSide.NONE)
+                        .setValue(EAST, RedstoneSide.NONE)
+                        .setValue(WEST, RedstoneSide.NONE)
         );
     }
-
-    // -----------------------------------------------------------------------
-    // Block state
-    // -----------------------------------------------------------------------
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         super.createBlockStateDefinition(builder);
         builder.add(FACING);
     }
-
-    // -----------------------------------------------------------------------
-    // Visual shape: a thin slab sitting on the attachment face
-    // -----------------------------------------------------------------------
 
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
@@ -86,20 +64,11 @@ public class WallCeilingRedstoneBlock extends RedStoneWireBlock {
         };
     }
 
-    // -----------------------------------------------------------------------
-    // Placement
-    // -----------------------------------------------------------------------
-
-    /**
-     * Called when the player right-clicks a face to place the block.
-     * The clicked face becomes this wire's attached-surface normal.
-     */
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         BlockPos placePos = context.getClickedPos();
-        Direction attachedFace = null;
+        Direction attachedFace = Direction.UP;
 
-        // 1. Find the surface we are attaching to
         for (Direction direction : context.getNearestLookingDirections()) {
             Direction face = direction.getOpposite();
             BlockPos supportPos = placePos.relative(face.getOpposite());
@@ -111,57 +80,67 @@ public class WallCeilingRedstoneBlock extends RedStoneWireBlock {
             }
         }
 
-        if (attachedFace == null) return null;
-
-        // 2. Ask vanilla to calculate the visual lines/connections for this block state
-        BlockState vanillaState = super.getStateForPlacement(context);
-
-        // Failsafe in case vanilla tries to reject the placement
-        if (vanillaState == null) {
-            vanillaState = this.defaultBlockState();
-        }
-
-        // 3. Add our custom facing direction to the connected state
-        return vanillaState.setValue(FACING, attachedFace);
+        BlockState state = this.defaultBlockState().setValue(FACING, attachedFace);
+        return calculateVisualConnections(context.getLevel(), placePos, state);
     }
 
-    // -----------------------------------------------------------------------
-    // Survival / neighbor updates
-    // -----------------------------------------------------------------------
-
-    /**
-     * The wire survives as long as its backing surface is sturdy.
-     */
     @Override
-    public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
-        Direction facing = state.getValue(FACING);
-        BlockPos supportPos = pos.relative(facing.getOpposite());
-        return level.getBlockState(supportPos).isFaceSturdy(level, supportPos, facing);
-    }
-
-    /**
-     * If the support face disappears, regular wall/ceiling wire drops.
-     */
-    @Override
-    public BlockState updateShape(
-            BlockState state,
-            Direction direction,
-            BlockState neighborState,
-            LevelAccessor level,
-            BlockPos pos,
-            BlockPos neighborPos) {
-
+    public BlockState updateShape(BlockState state, Direction direction, BlockState neighborState, LevelAccessor level, BlockPos pos, BlockPos neighborPos) {
         Direction facing = state.getValue(FACING);
 
         if (direction == facing.getOpposite() && !neighborState.isFaceSturdy(level, neighborPos, facing)) {
             return Blocks.AIR.defaultBlockState();
         }
 
-        if (level instanceof Level realLevel && !realLevel.isClientSide) {
-            updatePower(realLevel, pos, state);
+        // We ONLY calculate visual lines here. We do NOT call updatePower here anymore,
+        // because it was overwriting the visual changes.
+        if (level instanceof Level realLevel) {
+            return calculateVisualConnections(realLevel, pos, state);
         }
 
-        return super.updateShape(state, direction, neighborState, level, pos, neighborPos);
+        return state;
+    }
+
+    private BlockState calculateVisualConnections(Level level, BlockPos pos, BlockState state) {
+        Direction facing = state.getValue(FACING);
+        boolean connectN = false, connectS = false, connectE = false, connectW = false;
+
+        if (facing == Direction.UP || facing == Direction.DOWN) {
+            connectN = connectsTo(level, pos, Direction.NORTH);
+            connectS = connectsTo(level, pos, Direction.SOUTH);
+            connectE = connectsTo(level, pos, Direction.EAST);
+            connectW = connectsTo(level, pos, Direction.WEST);
+        } else if (facing == Direction.NORTH || facing == Direction.SOUTH) {
+            connectN = connectsTo(level, pos, Direction.UP);
+            connectS = connectsTo(level, pos, Direction.DOWN);
+            connectE = connectsTo(level, pos, Direction.EAST);
+            connectW = connectsTo(level, pos, Direction.WEST);
+        } else if (facing == Direction.EAST || facing == Direction.WEST) {
+            connectN = connectsTo(level, pos, Direction.UP);
+            connectS = connectsTo(level, pos, Direction.DOWN);
+            connectE = connectsTo(level, pos, Direction.NORTH);
+            connectW = connectsTo(level, pos, Direction.SOUTH);
+        }
+
+        return state
+                .setValue(NORTH, connectN ? RedstoneSide.SIDE : RedstoneSide.NONE)
+                .setValue(SOUTH, connectS ? RedstoneSide.SIDE : RedstoneSide.NONE)
+                .setValue(EAST, connectE ? RedstoneSide.SIDE : RedstoneSide.NONE)
+                .setValue(WEST, connectW ? RedstoneSide.SIDE : RedstoneSide.NONE);
+    }
+
+    private boolean connectsTo(Level level, BlockPos pos, Direction dir) {
+        BlockPos neighborPos = pos.relative(dir);
+        BlockState neighborState = level.getBlockState(neighborPos);
+        return neighborState.getBlock() instanceof RedStoneWireBlock ||
+                neighborState.getBlock().canConnectRedstone(neighborState, level, neighborPos, dir.getOpposite());
+    }
+
+    @Override
+    public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
+        Direction facing = state.getValue(FACING);
+        BlockPos supportPos = pos.relative(facing.getOpposite());
+        return level.getBlockState(supportPos).isFaceSturdy(level, supportPos, facing);
     }
 
     @Override
@@ -180,14 +159,6 @@ public class WallCeilingRedstoneBlock extends RedStoneWireBlock {
         }
     }
 
-    // -----------------------------------------------------------------------
-    // Redstone signal direction
-    // -----------------------------------------------------------------------
-
-    /**
-     * Emit redstone power toward all sides except back into the supporting surface.
-     * This allows floor↔wall↔ceiling transitions and corner propagation.
-     */
     @Override
     public int getSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
         int power = state.getValue(POWER);
@@ -199,30 +170,38 @@ public class WallCeilingRedstoneBlock extends RedStoneWireBlock {
         return power;
     }
 
-    /**
-     * Allow vanilla dust and components to recognize this block as a redstone connection target.
-     */
     @Override
     public boolean canConnectRedstone(BlockState state, BlockGetter level, BlockPos pos, @Nullable Direction direction) {
         return true;
     }
 
-    /**
-     * Direct power is emitted from the outward face.
-     */
     @Override
     public int getDirectSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
         return getSignal(state, level, pos, direction);
     }
 
-    private void updatePower(Level level, BlockPos pos, BlockState state) {
+    private void updatePower(Level level, BlockPos pos, BlockState oldState) {
+        // ALWAYS get the absolute latest state from the world so we don't accidentally erase the visual lines
+        BlockState currentState = level.getBlockState(pos);
+        if (currentState.getBlock() != this) return;
+
+        int currentPower = currentState.getValue(POWER);
+
+        // TEMPORARY FIX: Set power to 0 briefly so it doesn't read its own signal echoing off solid blocks!
+        // The '20' flag prevents nearby blocks from noticing this temporary drop to 0.
+        level.setBlock(pos, currentState.setValue(POWER, 0), 20);
+
         int targetPower = calculateTargetPower(level, pos);
-        int currentPower = state.getValue(POWER);
+
         if (targetPower == currentPower) {
+            // Put it back to what it was
+            level.setBlock(pos, currentState.setValue(POWER, currentPower), 2);
             return;
         }
 
-        level.setBlock(pos, state.setValue(POWER, targetPower), 2);
+        // Apply new power
+        level.setBlock(pos, currentState.setValue(POWER, targetPower), 2);
+
         level.updateNeighborsAt(pos, this);
         for (Direction direction : Direction.values()) {
             level.updateNeighborsAt(pos.relative(direction), this);
@@ -230,21 +209,18 @@ public class WallCeilingRedstoneBlock extends RedStoneWireBlock {
     }
 
     private int calculateTargetPower(Level level, BlockPos pos) {
+        // Because we set our own power to 0 in updatePower(), this is now safe to call!
         int strongest = level.getBestNeighborSignal(pos);
 
         for (Direction direction : Direction.values()) {
             BlockPos neighborPos = pos.relative(direction);
             BlockState neighborState = level.getBlockState(neighborPos);
 
-            strongest = Math.max(strongest, neighborState.getSignal(level, neighborPos, direction.getOpposite()));
-
             if (neighborState.getBlock() instanceof RedStoneWireBlock) {
                 strongest = Math.max(strongest, neighborState.getValue(POWER) - 1);
             }
 
-            if (strongest >= 15) {
-                return 15;
-            }
+            if (strongest >= 15) return 15;
         }
 
         return Mth.clamp(strongest, 0, 15);
