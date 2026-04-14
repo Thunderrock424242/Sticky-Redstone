@@ -4,7 +4,8 @@
   "package": "com.thunder.stickyredstone.mixins",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "RedstoneItemMixin"
+    "RedstoneItemMixin",
+    "RedstoneWireBlockMixin"
   ],
   "injectors": {
     "defaultRequire": 1
