@@ -14,10 +14,10 @@ import net.minecraft.world.level.block.state.properties.RedstoneSide;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.gen.Invoker;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -37,11 +37,8 @@ public abstract class RedstoneWireBlockMixin {
     @Unique
     private static final VoxelShape STICKYREDSTONE_SHAPE_EAST = Block.box(0, 0, 0, 2, 16, 16);
 
-    @Shadow
-    protected abstract void registerDefaultState(BlockState state);
-
-    @Shadow
-    public abstract BlockState defaultBlockState();
+    @Invoker("registerDefaultState")
+    protected abstract void stickyredstone$invokeRegisterDefaultState(BlockState state);
 
     @Inject(method = "createBlockStateDefinition", at = @At("TAIL"))
     private void stickyredstone$addFacing(StateDefinition.Builder<Block, BlockState> builder, CallbackInfo ci) {
@@ -50,7 +47,7 @@ public abstract class RedstoneWireBlockMixin {
 
     @Inject(method = "<init>", at = @At("TAIL"))
     private void stickyredstone$setDefaultFacing(Block.Properties properties, CallbackInfo ci) {
-        this.registerDefaultState(this.defaultBlockState().setValue(StickyRedstoneProperties.FACING, Direction.UP));
+        this.stickyredstone$invokeRegisterDefaultState(((RedStoneWireBlock) (Object) this).defaultBlockState().setValue(StickyRedstoneProperties.FACING, Direction.UP));
     }
 
     @Inject(method = "getShape", at = @At("HEAD"), cancellable = true)
@@ -92,7 +89,11 @@ public abstract class RedstoneWireBlockMixin {
         cir.setReturnValue(state.setValue(StickyRedstoneProperties.FACING, clickedFace));
     }
 
-    @Inject(method = "calculateShape", at = @At("RETURN"), cancellable = true)
+    @Inject(
+            method = "calculateShape(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Lnet/minecraft/world/level/block/state/BlockState;",
+            at = @At("RETURN"),
+            cancellable = true
+    )
     private void stickyredstone$rotateVisualConnections(BlockGetter level, BlockPos pos, BlockState state, CallbackInfoReturnable<BlockState> cir) {
         BlockState shaped = cir.getReturnValue();
         Direction facing = state.getValue(StickyRedstoneProperties.FACING);
