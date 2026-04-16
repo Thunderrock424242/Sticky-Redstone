@@ -1,4 +1,4 @@
-package com.thunder.stickyredstone.mixins.support;
+package com.thunder.stickyredstone.support;
 
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;

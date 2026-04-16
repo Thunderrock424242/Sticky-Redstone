@@ -1,6 +1,6 @@
 package com.thunder.stickyredstone.mixins;
 
-import com.thunder.stickyredstone.mixins.support.StickyRedstoneProperties;
+import com.thunder.stickyredstone.support.StickyRedstoneProperties;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockGetter;
